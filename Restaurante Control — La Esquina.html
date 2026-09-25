@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Restaurante Control — La Esquina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#f2ede2; --paper:#faf7f0; --charcoal:#2a2520; --charcoal-soft:#5b544a;
+  --terracotta:#bd5a37; --terracotta-soft:#f0d9cd;
+  --mustard:#bf8c2b; --mustard-soft:#f2e4bd;
+  --sage:#748258; --sage-soft:#dde4cd;
+  --line:#e2d9c7; --sidebar:#221e19; --sidebar-text:#cfc6b6;
+  --danger:#a8412c;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --cream:#211d18; --paper:#2a251f; --charcoal:#f2ede2; --charcoal-soft:#b9b0a0; --line:#3b352c; }
+}
+*{box-sizing:border-box;}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+body{margin:0;background:var(--cream);color:var(--charcoal);font-family:'Work Sans',sans-serif;-webkit-font-smoothing:antialiased;}
+h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;}
+:focus-visible{outline:2px solid var(--terracotta);outline-offset:2px;}
+
+.app{display:flex;min-height:100vh;}
+.sidebar{width:220px;background:var(--sidebar);color:var(--sidebar-text);padding:28px 18px;flex-shrink:0;display:flex;flex-direction:column;gap:28px;padding-top:calc(28px + env(safe-area-inset-top,0px));}
+.sidebar .brand{font-family:'Fraunces',serif;font-size:1.3rem;color:#f2ede2;font-weight:600;line-height:1.2;}
+.sidebar .brand span{display:block;font-family:'Work Sans',sans-serif;font-size:.68rem;letter-spacing:.03em;color:#8c8272;margin-top:4px;font-weight:400;}
+.navlist{display:flex;flex-direction:column;gap:4px;}
+.navlink{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:none;border:none;color:var(--sidebar-text);text-align:left;font-size:.94rem;transition:background .15s;}
+.navlink:hover{background:#332c24;}
+.navlink.active{background:var(--terracotta);color:#fff;}
+.main{flex:1;min-width:0;padding:32px 36px 100px;max-width:1100px;}
+.topline{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:22px;flex-wrap:wrap;gap:10px;}
+.topline h1{font-size:1.6rem;}
+.subtitle{color:var(--charcoal-soft);font-size:.92rem;margin-top:4px;}
+
+.bottomnav{display:none;}
+
+.grid-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:22px;}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px 18px;}
+.stat-label{font-size:.78rem;color:var(--charcoal-soft);margin-bottom:6px;}
+.stat-value{font-family:'IBM Plex Mono',monospace;font-size:1.5rem;font-weight:500;}
+.stat-value.terracotta{color:var(--terracotta);}
+.stat-value.sage{color:var(--sage);}
+.stat-value.mustard{color:var(--mustard);}
+
+.row2{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;align-items:start;}
+@media(max-width:820px){.row2{grid-template-columns:1fr;}}
+
+.section-title{font-size:1.05rem;margin-bottom:12px;}
+.activity-item{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:.88rem;}
+.activity-item:last-child{border-bottom:none;}
+.activity-time{color:var(--charcoal-soft);font-family:'IBM Plex Mono',monospace;font-size:.8rem;}
+
+.btn{border:none;border-radius:8px;padding:10px 18px;font-size:.9rem;font-weight:500;transition:opacity .15s;}
+.btn:hover{opacity:.88;}
+.btn-primary{background:var(--terracotta);color:#fff;}
+.btn-secondary{background:transparent;border:1px solid var(--line);color:var(--charcoal);}
+.btn-sm{padding:6px 12px;font-size:.8rem;border-radius:6px;}
+
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;align-items:center;justify-content:space-between;}
+.toolbar-left{display:flex;gap:10px;flex-wrap:wrap;flex:1;}
+input[type=text],input[type=search],select,input[type=tel],input[type=date],input[type=time],input[type=number],textarea{
+  border:1px solid var(--line);background:var(--paper);color:var(--charcoal);border-radius:8px;padding:9px 12px;font-size:.88rem;
+}
+input[type=search]{min-width:200px;flex:1;}
+
+table{width:100%;border-collapse:collapse;font-size:.87rem;}
+th{text-align:left;font-weight:500;color:var(--charcoal-soft);font-size:.76rem;letter-spacing:.02em;padding:8px 10px;border-bottom:1px solid var(--line);}
+td{padding:10px 10px;border-bottom:1px solid var(--line);}
+.tablewrap{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:10px;}
+.tablewrap table{min-width:560px;}
+
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.74rem;font-weight:500;}
+.badge-confirmada{background:var(--sage-soft);color:#3f4a2c;}
+.badge-pendiente{background:var(--mustard-soft);color:#6b4f14;}
+.badge-atendida{background:#dcdcd6;color:#44403a;}
+.badge-cancelada{background:#f2d6ce;color:var(--danger);}
+.badge-disponible{background:var(--sage-soft);color:#3f4a2c;}
+.badge-ocupada{background:var(--terracotta-soft);color:#7c3a1f;}
+.badge-reservada{background:var(--mustard-soft);color:#6b4f14;}
+.badge-limpieza{background:#dcdcd6;color:#44403a;}
+
+.zone{margin-bottom:26px;}
+.zone h3{margin-bottom:12px;font-size:1rem;}
+.tablecards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;}
+.tablecard{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px;}
+.tablecard .num{font-family:'IBM Plex Mono',monospace;font-size:1.1rem;}
+.tablecard .cap{font-size:.8rem;color:var(--charcoal-soft);margin:4px 0 10px;}
+.tablecard select{width:100%;}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(20,17,13,.5);display:none;align-items:center;justify-content:center;padding:20px;z-index:50;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--paper);border-radius:12px;padding:24px;width:100%;max-width:440px;max-height:88vh;overflow-y:auto;}
+.modal h2{font-size:1.2rem;margin-bottom:16px;}
+.field{margin-bottom:12px;display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:.8rem;color:var(--charcoal-soft);}
+.field input,.field select,.field textarea{width:100%;}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--charcoal);color:var(--cream);padding:11px 20px;border-radius:8px;font-size:.86rem;z-index:100;opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+.toast.error{background:var(--danger);}
+
+.empty{padding:30px 10px;text-align:center;color:var(--charcoal-soft);font-size:.9rem;}
+
+.qr-note{background:var(--mustard-soft);border:1px solid var(--mustard);border-radius:8px;padding:12px 14px;font-size:.82rem;color:#5c430f;margin-bottom:16px;}
+
+@media(max-width:860px){
+  .sidebar{display:none;}
+  .main{padding:24px 16px 90px;max-width:100%;}
+  .bottomnav{display:flex;position:fixed;bottom:0;left:0;right:0;background:var(--sidebar);padding:8px 6px calc(8px + env(safe-area-inset-bottom,0px));justify-content:space-around;z-index:40;}
+  .bottomnav button{background:none;border:none;color:var(--sidebar-text);font-size:.68rem;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 8px;border-radius:8px;}
+  .bottomnav button.active{color:#fff;background:var(--terracotta);}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" id="sidebar">
+    <div class="brand">La Esquina<span>Restaurante Control</span></div>
+    <div class="navlist" id="navlist">
+      <button class="navlink" data-view="resumen">Resumen</button>
+      <button class="navlink" data-view="reservas">Reservas</button>
+      <button class="navlink" data-view="mesas">Mesas</button>
+      <button class="navlink" data-view="caja">Caja</button>
+    </div>
+  </nav>
+
+  <main class="main">
+    <div id="view-resumen"></div>
+    <div id="view-reservas" style="display:none"></div>
+    <div id="view-mesas" style="display:none"></div>
+    <div id="view-caja" style="display:none"></div>
+  </main>
+</div>
+
+<nav class="bottomnav" id="bottomnav">
+  <button data-view="resumen">Resumen</button>
+  <button data-view="reservas">Reservas</button>
+  <button data-view="mesas">Mesas</button>
+  <button data-view="caja">Caja</button>
+</nav>
+
+<div class="modal-overlay" id="modalOverlay"><div class="modal" id="modalBody"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'la-esquina-control-v1';
+
+function seedData(){
+  return {
+    seeded:true,
+    reservas:[
+      {id:'r1',cliente:'Marisol Aguirre',telefono:'71234567',fecha:hoy(),hora:'13:00',personas:4,mesa:'S2',nota:'Cumpleaños',estado:'confirmada'},
+      {id:'r2',cliente:'Diego Choque',telefono:'76543210',fecha:hoy(),hora:'13:30',personas:2,mesa:'B1',nota:'',estado:'pendiente'},
+      {id:'r3',cliente:'Familia Rojas',telefono:'69988776',fecha:hoy(),hora:'19:00',personas:6,mesa:'S4',nota:'Silla para bebé',estado:'confirmada'},
+      {id:'r4',cliente:'Elena Vargas',telefono:'77112233',fecha:hoy(),hora:'20:00',personas:2,mesa:'T1',nota:'',estado:'atendida'},
+      {id:'r5',cliente:'Grupo Andino',telefono:'78899001',fecha:hoy(),hora:'21:00',personas:8,mesa:'S6',nota:'Mesa larga',estado:'cancelada'},
+    ],
+    mesas:[
+      {id:'T1',zona:'Terraza',capacidad:2,estado:'ocupada'},
+      {id:'T2',zona:'Terraza',capacidad:2,estado:'disponible'},
+      {id:'T3',zona:'Terraza',capacidad:4,estado:'limpieza'},
+      {id:'S1',zona:'Salón',capacidad:2,estado:'disponible'},
+      {id:'S2',zona:'Salón',capacidad:4,estado:'reservada'},
+      {id:'S4',zona:'Salón',capacidad:6,estado:'reservada'},
+      {id:'S6',zona:'Salón',capacidad:8,estado:'disponible'},
+      {id:'B1',zona:'Barra',capacidad:2,estado:'reservada'},
+      {id:'B2',zona:'Barra',capacidad:2,estado:'disponible'},
+    ],
+    movimientos:[
+      {id:'m1',concepto:'Mesa T1 — almuerzo',monto:145,hora:'12:40',metodo:'tarjeta',tipo:'ingreso',estado:'cobrado'},
+      {id:'m2',concepto:'Mesa S2 — bebidas',monto:38,hora:'13:05',metodo:'efectivo',tipo:'ingreso',estado:'cobrado'},
+      {id:'m3',concepto:'Compra de servilletas',monto:22,hora:'11:15',metodo:'efectivo',tipo:'egreso',estado:'pagado'},
+      {id:'m4',concepto:'Mesa B1 — aperitivos',monto:64,hora:'13:40',metodo:'QR',tipo:'ingreso',estado:'pendiente'},
+      {id:'m5',concepto:'Mesa S4 — cena',monto:210,hora:'14:02',metodo:'QR',tipo:'ingreso',estado:'pendiente'},
+    ],
+    pulso:[8,12,20,35,60,90,70,40,25,15,10,8,30,55,80,65,20],
+  };
+}
+function hoy(){ return new Date().toISOString().slice(0,10); }
+function horaAhora(){ return new Date().toTimeString().slice(0,5); }
+
+let state = load();
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  const s = seedData();
+  save(s);
+  return s;
+}
+function save(s){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }catch(e){}
+}
+function persist(){ save(state); }
+
+function toast(msg, isError){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isError?' error':'');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=> t.className='toast', 2200);
+}
+
+// ---------- navigation ----------
+let currentView = 'resumen';
+function setView(v){
+  currentView = v;
+  ['resumen','reservas','mesas','caja'].forEach(id=>{
+    document.getElementById('view-'+id).style.display = (id===v)?'block':'none';
+  });
+  document.querySelectorAll('#navlist .navlink').forEach(b=> b.classList.toggle('active', b.dataset.view===v));
+  document.querySelectorAll('#bottomnav button').forEach(b=> b.classList.toggle('active', b.dataset.view===v));
+  render();
+}
+document.querySelectorAll('#navlist .navlink, #bottomnav button').forEach(b=>{
+  b.addEventListener('click', ()=> setView(b.dataset.view));
+});
+
+// ---------- modal helper ----------
+function openModal(html){
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
+document.getElementById('modalOverlay').addEventListener('click', e=>{
+  if(e.target.id==='modalOverlay') closeModal();
+});
+
+// ---------- render dispatcher ----------
+function render(){
+  if(currentView==='resumen') renderResumen();
+  if(currentView==='reservas') renderReservas();
+  if(currentView==='mesas') renderMesas();
+  if(currentView==='caja') renderCaja();
+}
+
+// ---------- RESUMEN ----------
+function renderResumen(){
+  const el = document.getElementById('view-resumen');
+  const ventasHoy = state.movimientos.filter(m=>m.tipo==='ingreso'&&m.estado!=='pendiente').reduce((a,m)=>a+m.monto,0);
+  const reservasHoy = state.reservas.filter(r=>r.fecha===hoy()).length;
+  const mesasLibres = state.mesas.filter(m=>m.estado==='disponible').length;
+  const qrPend = state.movimientos.filter(m=>m.metodo==='QR'&&m.estado==='pendiente').length;
+  const maxPulso = Math.max(...state.pulso,1);
+  const bars = state.pulso.map((v,i)=>`<div title="${11+i}:00" style="flex:1;background:var(--terracotta);opacity:${0.35+0.65*(v/maxPulso)};height:${Math.max(6,(v/maxPulso)*100)}%;border-radius:3px 3px 0 0;"></div>`).join('');
+
+  el.innerHTML = `
+    <div class="topline">
+      <div>
+        <h1>Buen turno, equipo de La Esquina</h1>
+        <div class="subtitle">Aquí está el estado del servicio de hoy, ${formatFechaLarga(hoy())}.</div>
+      </div>
+      <button class="btn btn-primary" id="btnNuevaReservaResumen">Nueva reserva</button>
+    </div>
+    <div class="grid-stats">
+      <div class="card"><div class="stat-label">Ventas del día</div><div class="stat-value terracotta mono">Bs ${ventasHoy}</div></div>
+      <div class="card"><div class="stat-label">Reservas de hoy</div><div class="stat-value mono">${reservasHoy}</div></div>
+      <div class="card"><div class="stat-label">Mesas libres</div><div class="stat-value sage mono">${mesasLibres}</div></div>
+      <div class="card"><div class="stat-label">Pagos QR pendientes</div><div class="stat-value mustard mono">${qrPend}</div></div>
+    </div>
+    <div class="row2">
+      <div class="card">
+        <h3 class="section-title">Pulso del turno</h3>
+        <div style="display:flex;align-items:flex-end;gap:4px;height:120px;">${bars}</div>
+        <div class="subtitle" style="margin-top:8px;">Movimiento de ventas por hora, desde las 11:00.</div>
+      </div>
+      <div class="card">
+        <h3 class="section-title">Actividad reciente</h3>
+        <div id="actividadList"></div>
+      </div>
+    </div>
+  `;
+  const acts = buildActividad().slice(0,6);
+  const list = document.getElementById('actividadList');
+  list.innerHTML = acts.length ? acts.map(a=>`
+    <div class="activity-item"><span>${a.texto}</span><span class="activity-time">${a.hora}</span></div>
+  `).join('') : `<div class="empty">Aún no hay actividad registrada.</div>`;
+
+  document.getElementById('btnNuevaReservaResumen').addEventListener('click', ()=>{ setView('reservas'); setTimeout(openReservaForm,0); });
+}
+function buildActividad(){
+  const items = [];
+  state.movimientos.forEach(m=> items.push({texto:`${m.tipo==='ingreso'?'Cobro':'Gasto'}: ${m.concepto} (${m.metodo})`, hora:m.hora}));
+  state.reservas.forEach(r=> items.push({texto:`Reserva de ${r.cliente} — ${r.estado}`, hora:r.hora}));
+  return items.sort((a,b)=> b.hora.localeCompare(a.hora));
+}
+function formatFechaLarga(iso){
+  const d = new Date(iso+'T00:00:00');
+  return d.toLocaleDateString('es-BO',{weekday:'long', day:'numeric', month:'long'});
+}
+
+// ---------- RESERVAS ----------
+let reservaFiltro = { texto:'', estado:'todos' };
+function renderReservas(){
+  const el = document.getElementById('view-reservas');
+  el.innerHTML = `
+    <div class="topline">
+      <div><h1>Reservas</h1><div class="subtitle">Gestiona las reservas del restaurante.</div></div>
+      <button class="btn btn-primary" id="btnNuevaReserva">Nueva reserva</button>
+    </div>
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input type="search" id="searchReserva" placeholder="Buscar por nombre o teléfono" value="${reservaFiltro.texto}">
+        <select id="filtroEstado">
+          ${['todos','confirmada','pendiente','atendida','cancelada'].map(s=>`<option value="${s}" ${reservaFiltro.estado===s?'selected':''}>${s==='todos'?'Todos los estados':cap(s)}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Cliente</th><th>Teléfono</th><th>Hora</th><th>Personas</th><th>Mesa</th><th>Estado</th><th></th></tr></thead>
+      <tbody id="reservasBody"></tbody>
+    </table></div>
+  `;
+  document.getElementById('btnNuevaReserva').addEventListener('click', openReservaForm);
+  document.getElementById('searchReserva').addEventListener('input', e=>{ reservaFiltro.texto=e.target.value; fillReservasBody(); });
+  document.getElementById('filtroEstado').addEventListener('change', e=>{ reservaFiltro.estado=e.target.value; fillReservasBody(); });
+  fillReservasBody();
+}
+function fillReservasBody(){
+  const body = document.getElementById('reservasBody');
+  const txt = reservaFiltro.texto.toLowerCase();
+  const rows = state.reservas.filter(r=>{
+    const matchTxt = !txt || r.cliente.toLowerCase().includes(txt) || r.telefono.includes(txt);
+    const matchEstado = reservaFiltro.estado==='todos' || r.estado===reservaFiltro.estado;
+    return matchTxt && matchEstado;
+  }).sort((a,b)=>a.hora.localeCompare(b.hora));
+  if(!rows.length){ body.innerHTML = `<tr><td colspan="7"><div class="empty">No se encontraron reservas con estos filtros.</div></td></tr>`; return; }
+  body.innerHTML = rows.map(r=>`
+    <tr>
+      <td>${r.cliente}${r.nota?`<div class="subtitle" style="font-size:.76rem;">${r.nota}</div>`:''}</td>
+      <td class="mono">${r.telefono}</td>
+      <td class="mono">${r.hora}</td>
+      <td class="mono">${r.personas}</td>
+      <td class="mono">${r.mesa||'—'}</td>
+      <td><span class="badge badge-${r.estado}">${cap(r.estado)}</span></td>
+      <td>
+        <select class="btn-sm estadoSelect" data-id="${r.id}" style="border:1px solid var(--line);border-radius:6px;">
+          ${['confirmada','pendiente','atendida','cancelada'].map(s=>`<option value="${s}" ${r.estado===s?'selected':''}>${cap(s)}</option>`).join('')}
+        </select>
+      </td>
+    </tr>
+  `).join('');
+  body.querySelectorAll('.estadoSelect').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const r = state.reservas.find(x=>x.id===sel.dataset.id);
+      r.estado = sel.value;
+      persist(); toast('Estado de reserva actualizado.'); fillReservasBody();
+    });
+  });
+}
+function openReservaForm(){
+  const mesasDisp = state.mesas.filter(m=>m.estado==='disponible');
+  openModal(`
+    <h2>Nueva reserva</h2>
+    <form id="formReserva">
+      <div class="field"><label>Cliente</label><input required type="text" name="cliente"></div>
+      <div class="field"><label>Teléfono</label><input required type="tel" name="telefono"></div>
+      <div class="field"><label>Fecha</label><input required type="date" name="fecha" value="${hoy()}"></div>
+      <div class="field"><label>Hora</label><input required type="time" name="hora" value="${horaAhora()}"></div>
+      <div class="field"><label>Cantidad de personas</label><input required type="number" min="1" name="personas" value="2"></div>
+      <div class="field"><label>Mesa</label>
+        <select name="mesa">
+          <option value="">Sin asignar</option>
+          ${mesasDisp.map(m=>`<option value="${m.id}">${m.id} — ${m.zona} (cap. ${m.capacidad})</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>Nota</label><textarea name="nota" rows="2"></textarea></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="cancelReserva">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar reserva</button>
+      </div>
+    </form>
+  `);
+  document.getElementById('cancelReserva').addEventListener('click', closeModal);
+  document.getElementById('formReserva').addEventListener('submit', e=>{
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const cliente = f.get('cliente').trim(); const telefono = f.get('telefono').trim();
+    if(!cliente || !telefono){ toast('Completa cliente y teléfono.', true); return; }
+    const nueva = { id:'r'+Date.now(), cliente, telefono, fecha:f.get('fecha'), hora:f.get('hora'),
+      personas:Number(f.get('personas'))||1, mesa:f.get('mesa'), nota:f.get('nota').trim(), estado:'pendiente' };
+    state.reservas.push(nueva);
+    if(nueva.mesa){ const m = state.mesas.find(x=>x.id===nueva.mesa); if(m) m.estado='reservada'; }
+    persist(); closeModal(); toast('Reserva creada.'); render();
+  });
+}
+
+// ---------- MESAS ----------
+function renderMesas(){
+  const el = document.getElementById('view-mesas');
+  const zonas = [...new Set(state.mesas.map(m=>m.zona))];
+  el.innerHTML = `
+    <div class="topline"><div><h1>Mesas</h1><div class="subtitle">Consulta y actualiza el estado de cada mesa.</div></div></div>
+    ${zonas.map(z=>`
+      <div class="zone"><h3>${z}</h3>
+        <div class="tablecards">
+          ${state.mesas.filter(m=>m.zona===z).map(m=>`
+            <div class="tablecard">
+              <div class="num">${m.id}</div>
+              <div class="cap">Capacidad: ${m.capacidad}</div>
+              <span class="badge badge-${m.estado}" style="margin-bottom:10px;display:inline-block;">${cap(m.estado)}</span>
+              <select class="mesaEstado" data-id="${m.id}">
+                ${['disponible','ocupada','reservada','limpieza'].map(s=>`<option value="${s}" ${m.estado===s?'selected':''}>${cap(s)}</option>`).join('')}
+              </select>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('')}
+  `;
+  el.querySelectorAll('.mesaEstado').forEach(sel=>{
+    sel.addEventListener('change', ()=>{
+      const m = state.mesas.find(x=>x.id===sel.dataset.id);
+      m.estado = sel.value; persist(); toast(`Mesa ${m.id} ahora está ${m.estado}.`); renderMesas();
+    });
+  });
+}
+
+// ---------- CAJA ----------
+function renderCaja(){
+  const el = document.getElementById('view-caja');
+  const ingresos = state.movimientos.filter(m=>m.tipo==='ingreso'&&m.estado!=='pendiente').reduce((a,m)=>a+m.monto,0);
+  const egresos = state.movimientos.filter(m=>m.tipo==='egreso').reduce((a,m)=>a+m.monto,0);
+  const total = ingresos - egresos;
+  const qrPend = state.movimientos.filter(m=>m.metodo==='QR'&&m.estado==='pendiente');
+
+  el.innerHTML = `
+    <div class="topline">
+      <div><h1>Caja</h1><div class="subtitle">Resumen de ingresos, egresos y movimientos del turno.</div></div>
+      <button class="btn btn-primary" id="btnNuevoMov">Registrar movimiento</button>
+    </div>
+    <div class="grid-stats">
+      <div class="card"><div class="stat-label">Total del día</div><div class="stat-value terracotta mono">Bs ${total}</div></div>
+      <div class="card"><div class="stat-label">Ingresos</div><div class="stat-value sage mono">Bs ${ingresos}</div></div>
+      <div class="card"><div class="stat-label">Egresos</div><div class="stat-value mono">Bs ${egresos}</div></div>
+    </div>
+    <div class="qr-note">Los pagos QR de esta versión son un registro de demostración. Marcar un pago como cobrado dentro de la app no confirma una transferencia bancaria real; verifica siempre el ingreso en la cuenta antes de dar el pedido por pagado.</div>
+    <h3 class="section-title">Pagos QR pendientes</h3>
+    <div class="tablewrap" style="margin-bottom:24px;">
+      <table>
+        <thead><tr><th>Concepto</th><th>Monto</th><th>Hora</th><th></th></tr></thead>
+        <tbody>
+          ${qrPend.length ? qrPend.map(m=>`
+            <tr><td>${m.concepto}</td><td class="mono">Bs ${m.monto}</td><td class="mono">${m.hora}</td>
+            <td><button class="btn btn-secondary btn-sm marcarCobrado" data-id="${m.id}">Marcar como cobrado</button></td></tr>
+          `).join('') : `<tr><td colspan="4"><div class="empty">No hay pagos QR pendientes.</div></td></tr>`}
+        </tbody>
+      </table>
+    </div>
+    <h3 class="section-title">Movimientos del día</h3>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Concepto</th><th>Monto</th><th>Hora</th><th>Método</th><th>Estado</th></tr></thead>
+        <tbody>
+          ${[...state.movimientos].sort((a,b)=>b.hora.localeCompare(a.hora)).map(m=>`
+            <tr><td>${m.concepto}</td><td class="mono">${m.tipo==='egreso'?'−':''}Bs ${m.monto}</td><td class="mono">${m.hora}</td><td>${m.metodo}</td>
+            <td><span class="badge badge-${m.estado==='pendiente'?'pendiente':'confirmada'}">${cap(m.estado)}</span></td></tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+  document.getElementById('btnNuevoMov').addEventListener('click', openMovForm);
+  el.querySelectorAll('.marcarCobrado').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const m = state.movimientos.find(x=>x.id===btn.dataset.id);
+      m.estado='cobrado'; persist(); toast('Pago QR marcado como cobrado en la app.'); renderCaja();
+    });
+  });
+}
+function openMovForm(){
+  openModal(`
+    <h2>Registrar movimiento</h2>
+    <form id="formMov">
+      <div class="field"><label>Concepto</label><input required type="text" name="concepto"></div>
+      <div class="field"><label>Monto (Bs)</label><input required type="number" min="0" step="0.01" name="monto"></div>
+      <div class="field"><label>Tipo</label>
+        <select name="tipo"><option value="ingreso">Ingreso</option><option value="egreso">Egreso</option></select>
+      </div>
+      <div class="field"><label>Método de pago</label>
+        <select name="metodo"><option value="efectivo">Efectivo</option><option value="tarjeta">Tarjeta</option><option value="QR">QR</option></select>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="cancelMov">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+      </div>
+    </form>
+  `);
+  document.getElementById('cancelMov').addEventListener('click', closeModal);
+  document.getElementById('formMov').addEventListener('submit', e=>{
+    e.preventDefault();
+    const f = new FormData(e.target);
+    const concepto = f.get('concepto').trim();
+    const monto = Number(f.get('monto'));
+    if(!concepto || !monto || monto<=0){ toast('Completa un concepto y un monto válido.', true); return; }
+    const metodo = f.get('metodo');
+    const nuevo = { id:'m'+Date.now(), concepto, monto, hora:horaAhora(), metodo,
+      tipo:f.get('tipo'), estado: metodo==='QR' ? 'pendiente' : (f.get('tipo')==='egreso'?'pagado':'cobrado') };
+    state.movimientos.push(nuevo);
+    persist(); closeModal();
+    toast(metodo==='QR' ? 'Movimiento QR registrado como pendiente (demostración).' : 'Movimiento registrado.');
+    render();
+  });
+}
+
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+setView('resumen');
+</script>
+</body>
+</html>
